@@ -1,20 +1,20 @@
-{{#each this}}
+{{#each hits}}
 <div class="photo-card">
-    <a class="gallery__item" href="{{this.largeImageURL}}">
-        <img class="photo" src="{{this.previewURL}}" alt="{{this.tags}}" loading="lazy" />
+    <a class="gallery__item" href="{{largeImageURL}}">
+        <img class="photo" src="{{previewURL}}" alt="{{tags}}" loading="lazy" />
     </a>
     <div class="info">
         <p class="info-item">
-            <b>Likes: <span class="info-item-text">{{this.likes}}</span></b>
+            <b>Likes: <span class="info-item-text">{{likes}}</span></b>
         </p>
         <p class="info-item">
-            <b>Views: <span class="info-item-text">{{this.views}}</span></b>
+            <b>Views: <span class="info-item-text">{{views}}</span></b>
         </p>
         <p class="info-item">
-            <b>Comments: <span class="info-item-text">{{this.comments}}</span></b>
+            <b>Comments: <span class="info-item-text">{{comments}}</span></b>
         </p>
         <p class="info-item">
-            <b>Downloads: <span class="info-item-text">{{this.downloads}}</span></b>
+            <b>Downloads: <span class="info-item-text">{{downloads}}</span></b>
         </p>
     </div>
 </div>
