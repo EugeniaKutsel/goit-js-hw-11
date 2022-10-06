@@ -41,7 +41,6 @@ function onSearchForm(e) {
       Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
         appendGalleryMarkup(hits);
         lightbox.refresh();
-        onScroll();
 
       if (currentHits === totalHits) {
         return;
