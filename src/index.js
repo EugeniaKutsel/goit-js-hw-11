@@ -1,99 +1,100 @@
-import APIservice from "./js/fetchGallery";
-import hitsTpl from "./templates/hits.hbs";
-import SimpleLightbox from "simplelightbox";
-import "simplelightbox/dist/simple-lightbox.min.css";
+import './css/styles.css';
+import axios from 'axios';
+import { renderGallery } from './js/renderGallery';
+import ApiService from './js/fetchGallery';
 import Notiflix from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+
+const apiService = new ApiService();
+
+const lightbox = new SimpleLightbox('.gallery a');
+
+let currentHits = 0;
 
 const refs = {
-    searchForm: document.querySelector('#search-form'),
-    loadMoreBtn: document.querySelector('.load-more'),
+    searchForm: document.querySelector('.search-form'),
     gallery: document.querySelector('.gallery'),
+    loadMoreBtn: document.querySelector('.load-more'),
 }
-
-const apiService = new APIservice();
-const lightbox = new SimpleLightbox('.gallery__item');
 
 refs.searchForm.addEventListener('submit', onSearchForm);
 refs.loadMoreBtn.addEventListener('click', onLoadMore);
+hideBtn();
 
-
-async function onSearchForm(e) {
-    e.preventDefault();
-    clearGallerry();
-
+function onSearchForm(e) {
+  e.preventDefault();
+  try {
+    hideBtn();
+    apiService.query = e.target.elements.searchQuery.value;
     apiService.resetPage();
-    apiService.query = e.currentTarget.elements.searchQuery.value;
-    if (apiService.query === '') {
-        chekInput();
+    apiService.fetchGallery().then(({ hits, totalHits }) => {
+      clearGallery();
+      currentHits = hits.length;
+
+      if (totalHits === 0 || apiService.query === '') {
+        Notiflix.Notify.failure(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
         return;
-    }
-    
-    try {
-        const result = await apiService.fetchGallery();
-        appendGalleryMarkup(result);
-        
-        scrollTo();
-        apiService.setTotalHits(result.totalHits); 
-
+      }
+      Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
+        appendGalleryMarkup(hits);
         lightbox.refresh();
-        
-        Notiflix.Notify.success(`Hooray! We found ${apiService.totalHits} images.`);
-        onShowLoadMoreBtn();
-        onLastPhotos();
-    }
+        onScroll();
 
-    catch (error) {
-    Notiflix.Notify.failure(
-    'Sorry, there are no images matching your search query. Please try again.',
-    );
-    }
+      if (currentHits === totalHits) {
+        return;
+      }
+      showBtn();
+    });
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 async function onLoadMore() {
-    const result = await apiService.fetchGallery();
-    appendGalleryMarkup(result);
+  hideBtn();
+  apiService.fetchGallery().then(({ hits, totalHits }) => {
+      appendGalleryMarkup(hits);
+      onScroll();
     lightbox.refresh();
+    showBtn();
+    currentHits += hits.length;
 
-    scrollTo();
-    onLastPhotos();
-    apiService.lastTotalHits();
-}
-
-function appendGalleryMarkup(markup) {
-    refs.gallery.insertAdjacentHTML('beforeend', hitsTpl(markup));
-}
-
-function clearGallerry() {
-    refs.gallery.innerHTML = '';
-}
-
-function onShowLoadMoreBtn() {
-    refs.loadMoreBtn.classList.remove('is-hidden');
-}
-function hideShowMoreBtn() {
-    refs.loadMoreBtn.classList.add('is-hidden');
-}
-
-function chekInput() {
-    Notiflix.Notify.failure('Sorry! You have to enter something.Please, try again!') 
-    hideShowMoreBtn();
-    apiService.resetPage(); 
+    if (currentHits === totalHits) {
+      Notiflix.Notify.failure('Were sorry, but youve reached the end of search results.');
+      hideBtn();
     }
-   
-function onLastPhotos() {
-        if (apiService.totalHits <= 40) {
-    hideShowMoreBtn();
-  Notiflix.Notify.info("We're sorry, but you've reached the end of search results");
-    return;
-  }
-    }
+  });
+}
 
-function scrollTo() {
+function appendGalleryMarkup(hits) {
+  refs.gallery.insertAdjacentHTML(
+    'beforeend',
+    renderGallery(hits)
+  );
+}
+
+function clearGallery() {
+  refs.gallery.innerHTML = '';
+}
+
+function hideBtn() {
+  refs.loadMoreBtn.classList.add('is-hidden');
+}
+
+function showBtn() {
+  refs.loadMoreBtn.classList.remove('is-hidden');
+}
+
+function onScroll() {
     const { height: cardHeight } = document
-    .querySelector(".gallery")
-    .firstElementChild.getBoundingClientRect();
-        window.scrollBy({
-        top: cardHeight * 2,
-        behavior: "smooth",
+  .querySelector(".gallery")
+  .firstElementChild.getBoundingClientRect();
+
+window.scrollBy({
+  top: cardHeight * 2,
+  behavior: "smooth",
 });
 }
